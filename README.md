@@ -17,9 +17,9 @@ To install the Blender S3 Integration add-on, follow these steps:
 
 1. **Download the Add-on**
    - Download the latest release of the add-on
-     ```cli
-        git clone https://github.com/mrkuros/bloc.git
-
+     ```
+     git clone https://github.com/mrkuros/bloc.git
+     
 1. **Install the Add-on in Blender**
    - Open Blender.
    - Go to `Edit > Preferences > Add-ons`.
