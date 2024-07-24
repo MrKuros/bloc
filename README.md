@@ -20,7 +20,7 @@ To install the Blender S3 Integration add-on, follow these steps:
         Open Blender.
         Go to Edit > Preferences > Add-ons.
         Click on Install at the top of the preferences window.
-		![2024-07-24-150222_1920x1080_scrot](https://github.com/user-attachments/assets/e973f4f7-2a49-4724-ba95-5fa0c672cdc0)
+![2024-07-24-150222_1920x1080_scrot](https://github.com/user-attachments/assets/e973f4f7-2a49-4724-ba95-5fa0c672cdc0)
 
         Select the downloaded ZIP file.
         Enable the add-on by checking the box next to "Blender S3 Integration".
@@ -41,7 +41,7 @@ Before using the add-on, you need to configure your AWS credentials:
     Set Your S3 Bucket Name
         Enter the name of your S3 bucket in the preferences.
 
-  		![2024-07-24-150233_1920x1080_scrot](https://github.com/user-attachments/assets/19e5737d-565f-43b4-8200-78bfd6684eb3)
+  ![2024-07-24-150233_1920x1080_scrot](https://github.com/user-attachments/assets/19e5737d-565f-43b4-8200-78bfd6684eb3)
 
 Usage
 
