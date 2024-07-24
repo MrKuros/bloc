@@ -16,7 +16,7 @@ Blender S3 Integration is a Blender add-on that allows users to seamlessly uploa
 To install the Blender S3 Integration add-on, follow these steps:
 
 1. **Download the Add-on**
-   - Download the latest release of the add-on from the [GitHub releases page](https://github.com/your-repo/releases).
+   - Download the latest release of the add-on from the [GitHub releases page](https://github.com/mrkuros/bloc.git).
 
 2. **Install the Add-on in Blender**
    - Open Blender.
@@ -31,6 +31,7 @@ Before using the add-on, you need to configure your AWS credentials:
 
 1. **Open Blender Preferences**
    - Go to `Edit > Preferences > Add-ons > Blender S3 Integration`.
+
 ![2024-07-24-150222_1920x1080_scrot](https://github.com/user-attachments/assets/8d102066-a5d6-43f3-a709-5e7d7c154160)
 
 
