@@ -2,7 +2,7 @@
 
 ## Overview
 
-Blender S3 Integration is a Blender add-on that allows users to seamlessly upload, download, and manage Blender files directly from AWS S3. This add-on enhances the workflow for 3D artists and developers by providing an easy-to-use interface within Blender to interact with AWS S3.
+Bloc is a Blender add-on that allows users to seamlessly upload, download, and manage Blender files directly from AWS S3. This add-on enhances the workflow for 3D artists and developers by providing an easy-to-use interface within Blender to interact with AWS S3.
 
 ## Features
 
