@@ -9,7 +9,7 @@ Bloc is a Blender add-on that allows users to seamlessly upload, download, and m
 - **Upload to S3**: Easily upload your Blender files to an S3 bucket.
 - **Download from S3**: Download files from your S3 bucket directly into Blender.
 - **List Files**: View a list of files in your S3 bucket and manage them.
-- **Delete and Update Files**: Delete or update files in your S3 bucket directly from Blender.
+- **Delete and Update Files**: Delete or update files in your S3 bucket directly from Blender. (still under development)
 
 ## Installation
 
