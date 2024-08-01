@@ -1,18 +1,17 @@
-import bpy
-import os
-import boto3
-import threading
-from botocore.exceptions import NoCredentialsError
-
 bl_info = {
     "name": "Blender S3 Integration",
     "author": "Kashish aka MrKuros",
     "version": (1, 1),
     "blender": (4, 1, 0),
     "location": "View3D > Tool Shelf > S3 Integration",
-    "description": "Upload ,delete and download Blender files to/from AWS S3",
+    "description": "Upload and download Blender files to/from AWS S3",
     "category": "Development",
 }
+
+import bpy
+import os
+import boto3
+from botocore.exceptions import NoCredentialsError
 
 s3_client = None  # Global S3 client
 
@@ -73,6 +72,9 @@ def upload_to_aws(local_file, bucket, s3_file):
     except NoCredentialsError:
         print("Credentials not available")
         return False
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return False
 
 def list_files_in_bucket(bucket):
     """List all files in an S3 bucket."""
@@ -103,8 +105,10 @@ def delete_file_from_s3(bucket, s3_file):
     try:
         s3_client.delete_object(Bucket=bucket, Key=s3_file)
         print(f"Deleted {s3_file} from {bucket}")
+        return True
     except Exception as e:
         print(f"Failed to delete {s3_file}: {e}")
+        return False
 
 class S3IntegrationPanel(bpy.types.Panel):
     bl_label = "S3 Integration"
@@ -138,14 +142,13 @@ class UpdateFileListOperator(bpy.types.Operator):
 
     def execute(self, context):
         """Update the scene's list of files from S3."""
-        def update_list():
-            scene = context.scene
-            items_to_add = list_files_in_bucket(bpy.context.preferences.addons[__name__].preferences.bucket_name)
-            scene.my_list.clear()
-            for item_name in items_to_add:
-                new_item = scene.my_list.add()
-                new_item.name = item_name
-        threading.Thread(target=update_list).start()
+        initialize_s3_client()  # Ensure S3 client is initialized
+        scene = context.scene
+        items_to_add = list_files_in_bucket(bpy.context.preferences.addons[__name__].preferences.bucket_name)
+        scene.my_list.clear()
+        for item_name in items_to_add:
+            new_item = scene.my_list.add()
+            new_item.name = item_name
         return {'FINISHED'}
 
 class UploadOperator(bpy.types.Operator):
@@ -153,12 +156,15 @@ class UploadOperator(bpy.types.Operator):
     bl_label = "Upload to S3"
 
     def execute(self, context):
-        """Upload the current .blend file to S3."""
-        def upload():
-            local_file_path = bpy.context.blend_data.filepath
-            s3_file_name = bpy.path.basename(local_file_path)
-            upload_to_aws(local_file_path, bpy.context.preferences.addons[__name__].preferences.bucket_name, s3_file_name)
-        threading.Thread(target=upload).start()
+        """Upload the current Blender file to S3."""
+        initialize_s3_client()  # Ensure S3 client is initialized
+        local_file_path = bpy.context.blend_data.filepath
+        s3_file_name = bpy.path.basename(local_file_path)
+        upload_to_aws(local_file_path, bpy.context.preferences.addons[__name__].preferences.bucket_name, s3_file_name)
+        
+        # Update the list of files in the panel after upload
+        bpy.ops.scene.update_list()
+
         return {'FINISHED'}
 
 class LoadFileOperator(bpy.types.Operator):
@@ -169,9 +175,8 @@ class LoadFileOperator(bpy.types.Operator):
 
     def execute(self, context):
         """Load a selected file from S3 into Blender."""
-        def load_file():
-            load_s3_file_into_blender(self.file_name)
-        threading.Thread(target=load_file).start()
+        initialize_s3_client()  # Ensure S3 client is initialized
+        load_s3_file_into_blender(self.file_name)
         return {'FINISHED'}
 
 class DeleteFileOperator(bpy.types.Operator):
@@ -181,17 +186,15 @@ class DeleteFileOperator(bpy.types.Operator):
     file_name: bpy.props.StringProperty()
 
     def execute(self, context):
-        """Delete a selected file from S3."""
-        def delete_file():
-            delete_file_from_s3(bpy.context.preferences.addons[__name__].preferences.bucket_name, self.file_name)
-            # Remove the item from the scene's custom list
-            scene = context.scene
-            items = scene.my_list
-            for index, item in enumerate(items):
-                if item.name == self.file_name:
-                    items.remove(index)
-                    break
-        threading.Thread(target=delete_file).start()
+        """Delete a file from S3."""
+        initialize_s3_client()  # Ensure S3 client is initialized
+        success = delete_file_from_s3(
+            bpy.context.preferences.addons[__name__].preferences.bucket_name,
+            self.file_name
+        )
+        if success:
+            # Update the file list after deletion if successful
+            bpy.ops.scene.update_list()
         return {'FINISHED'}
 
 classes = [
@@ -230,4 +233,3 @@ def initialize_addon(dummy):
 
 if __name__ == "__main__":
     register()
-
