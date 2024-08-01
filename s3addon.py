@@ -1,17 +1,20 @@
-bl_info = {
-    "name": "Blender S3 Integration",
-    "author": "Kashish aka MrKuros",
-    "version": (1, 0),
-    "blender": (4, 1, 0),
-    "location": "View3D > Tool Shelf > S3 Integration",
-    "description": "Upload and download Blender files to/from AWS S3",
-    "category": "Development",
-}
-
 import bpy
 import os
 import boto3
+import threading
 from botocore.exceptions import NoCredentialsError
+
+bl_info = {
+    "name": "Blender S3 Integration",
+    "author": "Kashish aka MrKuros",
+    "version": (1, 1),
+    "blender": (4, 1, 0),
+    "location": "View3D > Tool Shelf > S3 Integration",
+    "description": "Upload ,delete and download Blender files to/from AWS S3",
+    "category": "Development",
+}
+
+s3_client = None  # Global S3 client
 
 class S3IntegrationPreferences(bpy.types.AddonPreferences):
     bl_idname = __name__
@@ -40,15 +43,18 @@ class S3IntegrationPreferences(bpy.types.AddonPreferences):
     )
 
     def draw(self, context):
+        """Draw the preferences UI."""
         layout = self.layout
         layout.prop(self, "access_key")
         layout.prop(self, "secret_key")
         layout.prop(self, "region_name")
         layout.prop(self, "bucket_name")
 
-def get_s3_client():
+def initialize_s3_client():
+    """Initialize the S3 client."""
+    global s3_client
     prefs = bpy.context.preferences.addons[__name__].preferences
-    return boto3.client(
+    s3_client = boto3.client(
         's3',
         aws_access_key_id=prefs.access_key,
         aws_secret_access_key=prefs.secret_key,
@@ -56,9 +62,9 @@ def get_s3_client():
     )
 
 def upload_to_aws(local_file, bucket, s3_file):
-    s3 = get_s3_client()
+    """Upload a file to AWS S3."""
     try:
-        s3.upload_file(local_file, bucket, s3_file)
+        s3_client.upload_file(local_file, bucket, s3_file)
         print("Upload Successful")
         return True
     except FileNotFoundError:
@@ -69,36 +75,36 @@ def upload_to_aws(local_file, bucket, s3_file):
         return False
 
 def list_files_in_bucket(bucket):
-    s3 = get_s3_client()
-    send_list = []
+    """List all files in an S3 bucket."""
+    files = []
     try:
         s3_resource = boto3.resource('s3')
         my_bucket = s3_resource.Bucket(bucket)
-        for obj in my_bucket.objects.all():
-            send_list.append(obj.key)
+        files = [obj.key for obj in my_bucket.objects.all()]
     except Exception as e:
         print(e)
-    return send_list
-
-def download_from_s3(bucket, s3_file, local_file):
-    s3 = get_s3_client()
-    try:
-        s3.download_file(bucket, s3_file, local_file)
-        print("Download Successful")
-    except Exception as e:
-        print(e)
+    return files
 
 def load_s3_file_into_blender(file_name):
-    prefs = bpy.context.preferences.addons[__name__].preferences
+    """Download and load an S3 file into Blender."""
     try:
         s3_file_path = f'/tmp/{file_name}'
-        download_from_s3(prefs.bucket_name, file_name, s3_file_path)
+        s3_client.download_file(bpy.context.preferences.addons[__name__].preferences.bucket_name, file_name, s3_file_path)
         bpy.ops.wm.open_mainfile(filepath=s3_file_path)
         os.remove(s3_file_path)
+        print("File Loaded Successfully")
     except NoCredentialsError:
         print("Credentials not available")
     except Exception as e:
         print(f"An error occurred: {e}")
+
+def delete_file_from_s3(bucket, s3_file):
+    """Delete a file from AWS S3."""
+    try:
+        s3_client.delete_object(Bucket=bucket, Key=s3_file)
+        print(f"Deleted {s3_file} from {bucket}")
+    except Exception as e:
+        print(f"Failed to delete {s3_file}: {e}")
 
 class S3IntegrationPanel(bpy.types.Panel):
     bl_label = "S3 Integration"
@@ -108,15 +114,18 @@ class S3IntegrationPanel(bpy.types.Panel):
     bl_category = "S3 Integration"
 
     def draw(self, context):
+        """Draw the panel UI."""
         layout = self.layout
         scene = context.scene
         col = layout.column()
-        
+
+        # List all files in the scene's custom list
         for item in scene.my_list:
             row = col.row()
             row.label(text=item.name)
             row.operator("s3integration.load_file", text="Load").file_name = item.name
-        
+            row.operator("s3integration.delete_file", text="Delete").file_name = item.name
+
         layout.operator("scene.update_list", text="Update List")
         layout.operator("s3integration.upload", text="Upload to S3")
 
@@ -128,25 +137,28 @@ class UpdateFileListOperator(bpy.types.Operator):
     bl_label = "Update List"
 
     def execute(self, context):
-        scene = context.scene
-        prefs = bpy.context.preferences.addons[__name__].preferences
-        items_to_add = list_files_in_bucket(prefs.bucket_name)
-        scene.my_list.clear()
-        
-        for item_name in items_to_add:
-            new_item = scene.my_list.add()
-            new_item.name = item_name
+        """Update the scene's list of files from S3."""
+        def update_list():
+            scene = context.scene
+            items_to_add = list_files_in_bucket(bpy.context.preferences.addons[__name__].preferences.bucket_name)
+            scene.my_list.clear()
+            for item_name in items_to_add:
+                new_item = scene.my_list.add()
+                new_item.name = item_name
+        threading.Thread(target=update_list).start()
         return {'FINISHED'}
 
 class UploadOperator(bpy.types.Operator):
     bl_idname = "s3integration.upload"
-    bl_label = "Upload to S3"   
-    
+    bl_label = "Upload to S3"
+
     def execute(self, context):
-        prefs = bpy.context.preferences.addons[__name__].preferences
-        local_file_path = bpy.context.blend_data.filepath
-        s3_file_name = bpy.path.basename(local_file_path)
-        upload_to_aws(local_file_path, prefs.bucket_name, s3_file_name)
+        """Upload the current .blend file to S3."""
+        def upload():
+            local_file_path = bpy.context.blend_data.filepath
+            s3_file_name = bpy.path.basename(local_file_path)
+            upload_to_aws(local_file_path, bpy.context.preferences.addons[__name__].preferences.bucket_name, s3_file_name)
+        threading.Thread(target=upload).start()
         return {'FINISHED'}
 
 class LoadFileOperator(bpy.types.Operator):
@@ -156,7 +168,30 @@ class LoadFileOperator(bpy.types.Operator):
     file_name: bpy.props.StringProperty()
 
     def execute(self, context):
-        load_s3_file_into_blender(self.file_name)
+        """Load a selected file from S3 into Blender."""
+        def load_file():
+            load_s3_file_into_blender(self.file_name)
+        threading.Thread(target=load_file).start()
+        return {'FINISHED'}
+
+class DeleteFileOperator(bpy.types.Operator):
+    bl_idname = "s3integration.delete_file"
+    bl_label = "Delete File from S3"
+
+    file_name: bpy.props.StringProperty()
+
+    def execute(self, context):
+        """Delete a selected file from S3."""
+        def delete_file():
+            delete_file_from_s3(bpy.context.preferences.addons[__name__].preferences.bucket_name, self.file_name)
+            # Remove the item from the scene's custom list
+            scene = context.scene
+            items = scene.my_list
+            for index, item in enumerate(items):
+                if item.name == self.file_name:
+                    items.remove(index)
+                    break
+        threading.Thread(target=delete_file).start()
         return {'FINISHED'}
 
 classes = [
@@ -164,26 +199,30 @@ classes = [
     S3IntegrationPanel,
     UploadOperator,
     LoadFileOperator,
+    DeleteFileOperator,
     UpdateFileListOperator,
     MyPropGroup,
 ]
 
 def register():
+    """Register classes and properties."""
     for cls in classes:
         bpy.utils.register_class(cls)
     bpy.types.Scene.my_list = bpy.props.CollectionProperty(type=MyPropGroup)
     bpy.app.handlers.load_post.append(initialize_addon)
+    initialize_s3_client()  # Initialize the S3 client
 
 def unregister():
+    """Unregister classes and properties."""
     bpy.app.handlers.load_post.remove(initialize_addon)
     for cls in classes:
         bpy.utils.unregister_class(cls)
     del bpy.types.Scene.my_list
 
 def initialize_addon(dummy):
+    """Initialize the add-on, e.g., populate the list of files."""
     scene = bpy.context.scene
-    prefs = bpy.context.preferences.addons[__name__].preferences
-    items_to_add = list_files_in_bucket(prefs.bucket_name)
+    items_to_add = list_files_in_bucket(bpy.context.preferences.addons[__name__].preferences.bucket_name)
     scene.my_list.clear()
     for item_name in items_to_add:
         new_item = scene.my_list.add()
