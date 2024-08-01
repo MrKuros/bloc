@@ -11,6 +11,12 @@ Bloc is a Blender add-on that allows users to seamlessly upload, download, and m
 - **List Files**: View a list of files in your S3 bucket and manage them.
 - **Delete and Update Files**: Delete or update files in your S3 bucket directly from Blender.
 
+## New Release bug fixes
+- Initialized S3 client globally.
+- Combined download and load functions for code hygiene.
+- Added file delete functionality.
+- Improved error handling and user feedback."
+
 ## Installation
 
 To install the Blender S3 Integration add-on, follow these steps:
@@ -52,7 +58,7 @@ Before using the add-on, you need to configure your AWS credentials:
 Once installed and configured, you can use the add-on from the Blender interface:
 
 1. **Open the S3 Integration Panel**
-   - Go to the `View3D > Tool Shelf > S3 Integration` panel.
+   - Go to the `View3D > Tool Shelf > S3 Integration` panel and enjoy your life.
 
 ![2024-07-24-150241_1920x1080_scrot](https://github.com/user-attachments/assets/9f5a15af-1199-4ca0-b5f4-57eba054384a)
 
