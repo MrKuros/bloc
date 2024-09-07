@@ -2,32 +2,35 @@
 
 ## Overview
 
-Bloc is a Blender add-on that allows users to seamlessly upload, download, and manage Blender files directly from AWS S3. This add-on enhances the workflow for 3D artists and developers by providing an easy-to-use interface within Blender to interact with AWS S3.
+Bloc is a Blender add-on that integrates AWS S3 for seamless file management. It enhances the workflow for 3D artists and developers by allowing easy upload, download, and management of Blender files directly from within Blender.
 
 ## Features
 
-- **Upload to S3**: Easily upload your Blender files to an S3 bucket.
+- **Upload to S3**: Easily upload Blender files to an S3 bucket.
 - **Download from S3**: Download files from your S3 bucket directly into Blender.
-- **List Files**: View a list of files in your S3 bucket and manage them.
-- **Delete and Update Files**: Delete or update files in your S3 bucket directly from Blender.
+- **List Files**: View and manage files in your S3 bucket.
+- **Delete and Update Files**: Delete or update files in your S3 bucket from Blender.
 
-## Updated bug fixes and added features (v1.1)
-- Initialized S3 client globally.
-- Combined download and load functions for code hygiene.
-- Added file delete functionality.
-- Improved error handling and user feedback."
+## Updated Features (v2.0)
+
+- Upload Blender files with dependencies (textures, images, etc.) to S3.
+- Download Blender files with dependencies (textures, images, etc.) from S3.
+
+## Note
+
+- Dependency paths should be relative to the blend file and located in the same folder as the blend file.
 
 ## Installation
 
 To install the Blender S3 Integration add-on, follow these steps:
 
 1. **Download the Add-on**
-   - Download the latest release of the add-on
-     ```
+   - Clone the repository:
+     ```bash
      git clone https://github.com/mrkuros/bloc.git
-      ```
+     ```
      
-1. **Install the Add-on in Blender**
+2. **Install the Add-on in Blender**
    - Open Blender.
    - Go to `Edit > Preferences > Add-ons`.
    - Click on `Install` at the top of the preferences window.
@@ -36,36 +39,35 @@ To install the Blender S3 Integration add-on, follow these steps:
 
 ## Setup
 
-Before using the add-on, you need to configure your AWS credentials:
+Before using the add-on, configure your AWS credentials:
 
 1. **Open Blender Preferences**
    - Go to `Edit > Preferences > Add-ons > Blender S3 Integration`.
 
-![2024-07-24-150222_1920x1080_scrot](https://github.com/user-attachments/assets/8d102066-a5d6-43f3-a709-5e7d7c154160)
-
+   ![Blender Preferences](https://github.com/user-attachments/assets/8d102066-a5d6-43f3-a709-5e7d7c154160)
 
 2. **Enter AWS Credentials**
    - In the add-on preferences, enter your AWS Access Key, Secret Key, and the region where your S3 bucket is located.
 
 3. **Set Your S3 Bucket Name**
    - Enter the name of your S3 bucket in the preferences.
-  
-![2024-07-24-150233_1920x1080_scrot](https://github.com/user-attachments/assets/8ee196da-2d21-4e26-9cda-f88564d79be9)
 
+   ![Add-on Preferences](https://github.com/user-attachments/assets/8ee196da-2d21-4e26-9cda-f88564d79be9)
 
 ## Usage
 
-Once installed and configured, you can use the add-on from the Blender interface:
+Once installed and configured, use the add-on from the Blender interface:
 
 1. **Open the S3 Integration Panel**
-   - Go to the `View3D > Tool Shelf > S3 Integration` panel and enjoy your life.
+   - Go to `View3D > Tool Shelf > S3 Integration` panel to access the features.
 
-![2024-07-24-150241_1920x1080_scrot](https://github.com/user-attachments/assets/9f5a15af-1199-4ca0-b5f4-57eba054384a)
+   ![S3 Integration Panel](https://github.com/user-attachments/assets/9f5a15af-1199-4ca0-b5f4-57eba054384a)
 
 ## Contributing
 
-If you want to contribute to this project, please fork the repository and create a pull request with your changes.
+To contribute, fork the repository and create a pull request with your changes.
 
 ## License
 
-This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the GNU General Public License v3.0. See the [LICENSE](LICENSE) file for details.
+

@@ -62,29 +62,6 @@ def initialize_s3_client():
         region_name=prefs.region_name
     )
 
-class UploadOperator(bpy.types.Operator):
-    bl_idname = "s3integration.upload"
-    bl_label = "Upload to S3"
-
-    def execute(self, context):
-        """Upload the current Blender file to S3."""
-        initialize_s3_client()  # Ensure S3 client is initialized
-        local_file_path = bpy.context.blend_data.filepath
-        s3_file_name = os.path.basename(local_file_path).replace(".blend", "")
-
-        # Gather dependencies and create a package directory
-        package_dir = gather_dependencies(local_file_path)
-
-        # Upload the package directory to S3 without zipping
-        upload_folder_to_s3(package_dir, bpy.context.preferences.addons[__name__].preferences.bucket_name, s3_file_name)
-
-        # Clean up: remove the temporary package directory after upload
-        shutil.rmtree(package_dir)
-
-        # Update the list of files in the panel after upload
-        bpy.ops.scene.update_list()
-
-        return {'FINISHED'}
 
 
 def list_files_in_bucket(bucket):
@@ -130,6 +107,22 @@ def gather_dependencies(blend_file_path):
         shutil.copy(dep, dep_dest)
 
     return package_dir
+
+def upload_folder_to_s3(folder, bucket, s3_key):
+    """Upload a folder to AWS S3 without zipping."""
+    try:
+        for root, dirs, files in os.walk(folder):
+            for file in files:
+                local_file_path = os.path.join(root, file)
+                s3_file_path = os.path.relpath(local_file_path, folder)
+                s3_file_path = os.path.join(s3_key, s3_file_path)
+                s3_client.upload_file(local_file_path, bucket, s3_file_path)
+                print(f"Uploaded {local_file_path} to {s3_file_path} in {bucket}")
+        print(f"Uploaded {folder} to {s3_key} in {bucket}")
+    except NoCredentialsError:
+        print("Credentials not available")
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 def download_from_s3(bucket, s3_key, local_dir):
     """Download a file from AWS S3 to a local directory, ensuring correct path structure."""
@@ -244,6 +237,29 @@ class UpdateFileListOperator(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class UploadOperator(bpy.types.Operator):
+    bl_idname = "s3integration.upload"
+    bl_label = "Upload to S3"
+
+    def execute(self, context):
+        """Upload the current Blender file to S3."""
+        initialize_s3_client()  # Ensure S3 client is initialized
+        local_file_path = bpy.context.blend_data.filepath
+        s3_file_name = os.path.basename(local_file_path).replace(".blend", "")
+
+        # Gather dependencies and create a package directory
+        package_dir = gather_dependencies(local_file_path)
+
+        # Upload the package directory to S3 without zipping
+        upload_folder_to_s3(package_dir, bpy.context.preferences.addons[__name__].preferences.bucket_name, s3_file_name)
+
+        # Clean up: remove the temporary package directory after upload
+        shutil.rmtree(package_dir)
+
+        # Update the list of files in the panel after upload
+        bpy.ops.scene.update_list()
+
+        return {'FINISHED'}
 
 class LoadFileOperator(bpy.types.Operator):
     bl_idname = "s3integration.load_file"
