@@ -18,7 +18,7 @@ Bloc is a Blender add-on that integrates AWS S3 for seamless file management. It
 
 ## Note
 
-- Dependency paths should be relative to the blend file and located in the same folder as the blend file.
+- Dependency paths should be relative to the blend file and located in the same folder as the blend file (sub-directories are fine as long as they are in the same parent directory as the blend file).
 
 ## Installation
 
