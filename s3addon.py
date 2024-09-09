@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Blender S3 Integration",
     "author": "Kashish aka MrKuros",
-    "version": (1, 1),
+    "version": (2,0),
     "blender": (4, 1, 0),
     "location": "View3D > Tool Shelf > S3 Integration",
     "description": "Upload and download Blender files to/from AWS S3",
