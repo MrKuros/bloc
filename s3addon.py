@@ -14,6 +14,7 @@ import shutil
 import zipfile
 import boto3
 from botocore.exceptions import NoCredentialsError
+import tempfile
 
 s3_client = None  # Global S3 client
 
@@ -79,7 +80,7 @@ def gather_dependencies(blend_file_path):
     """Gather all dependencies of the blend file and copy them to a new folder."""
     base_dir = os.path.dirname(blend_file_path)
     package_dir_name = "package_" + os.path.basename(blend_file_path).split('.')[0]
-    package_dir = os.path.join("/tmp/blender_s3_package", package_dir_name)
+    package_dir = os.path.join(tempfile.gettempdir(), package_dir_name)
 
     # Create a new directory to store the blend file and dependencies
     os.makedirs(package_dir, exist_ok=True)
@@ -150,7 +151,7 @@ def download_from_s3(bucket, s3_key, local_dir):
 def load_s3_file_into_blender(file_name):
     """Download and load an S3 file into Blender."""
     try:
-        temp_dir = '/tmp/blender_s3_package/skinmodel'
+        temp_dir = os.path.join(tempfile.gettempdir(), "blender_s3_package", "skinmodel")
         os.makedirs(temp_dir, exist_ok=True)
 
         # Ensure S3 client is initialized
